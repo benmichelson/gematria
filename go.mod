@@ -1,3 +1,3 @@
-module github.com/meblum/gematria
+module github.com/benmichelson/gematria
 
-go 1.16
+go 1.18
