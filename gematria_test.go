@@ -57,3 +57,54 @@ func TestAdd(t *testing.T) {
 		t.Error(ok)
 	}
 }
+
+func TestHebrew(t *testing.T) {
+	v, _ := Hebrew(115)
+	if v != "קטו" {
+		t.Error(v)
+	}
+	v, _ = Hebrew(744)
+	if v != "תשדמ" {
+		t.Error(v)
+	}
+
+	for i := 1; i < 1000; i++ {
+		v, _ := Hebrew(i)
+		j, _ := Value(v)
+		if i != j {
+			t.Error(i)
+		}
+	}
+}
+
+func TestGeresh(t *testing.T) {
+	v, _ := Hebrew(1)
+	v, _ = AddGeresh(v)
+	if v != "א׳" {
+		t.Error(v)
+	}
+
+	v, _ = Hebrew(115)
+	v, _ = AddGeresh(v)
+	if v != "קט״ו" {
+		t.Error(v)
+	}
+
+	v, _ = Hebrew(116)
+	v, _ = AddGeresh(v)
+	if v != "קט״ז" {
+		t.Error(v)
+	}
+
+	v, _ = Hebrew(744)
+	v, _ = AddGeresh(v)
+	if v != "תשד״מ" {
+		t.Error(v)
+	}
+
+	v, _ = Hebrew(999)
+	v, _ = AddGeresh(v)
+	if v != "תתקצ״ט" {
+		t.Error(v)
+	}
+}

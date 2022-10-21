@@ -5,7 +5,7 @@
 package gematria
 
 import (
-	"fmt"
+	"errors"
 )
 
 var runeValues = map[rune]int{
@@ -91,6 +91,85 @@ var runeValues = map[rune]int{
 	rune(64335): 31, // Alef Lamed
 }
 
+var valueRunes = map[int]string{
+	0:   "",
+	1:   string(rune(1488)),
+	2:   string(rune(1489)),
+	3:   string(rune(1490)),
+	4:   string(rune(1491)),
+	5:   string(rune(1492)),
+	6:   string(rune(1493)),
+	7:   string(rune(1494)),
+	8:   string(rune(1495)),
+	9:   string(rune(1496)),
+	10:  string(rune(1497)),
+	20:  string(rune(1499)),
+	30:  string(rune(1500)),
+	40:  string(rune(1502)),
+	50:  string(rune(1504)),
+	60:  string(rune(1505)),
+	70:  string(rune(1506)),
+	80:  string(rune(1508)),
+	90:  string(rune(1510)),
+	100: string(rune(1511)),
+	200: string(rune(1512)),
+	300: string(rune(1513)),
+	400: string(rune(1514)),
+	500: string(rune(1514)) + string(rune(1511)),
+	600: string(rune(1514)) + string(rune(1512)),
+	700: string(rune(1514)) + string(rune(1513)),
+	800: string(rune(1514)) + string(rune(1514)),
+	900: string(rune(1514)) + string(rune(1514)) + string(rune(1511)),
+	1000: string(rune(1514)) + string(rune(1514)) + string(rune(1512)),
+	1100: string(rune(1514)) + string(rune(1514)) + string(rune(1513)),
+}
+
+// https://github.com/chaimleib/hebrew-special-numbers/blob/master/styles/default.yml
+var specials = map[int]string{
+	15:  valueRunes[9] + valueRunes[6],
+	16:  valueRunes[9] + valueRunes[7],
+	115: valueRunes[100] + valueRunes[9] + valueRunes[6],
+	116: valueRunes[100] + valueRunes[9] + valueRunes[7],
+	215: valueRunes[200] + valueRunes[9] + valueRunes[6],
+	216: valueRunes[200] + valueRunes[9] + valueRunes[7],
+	270: valueRunes[70] + valueRunes[200],
+	272: valueRunes[70] + valueRunes[200] + valueRunes[2],
+	274: valueRunes[70] + valueRunes[4] + valueRunes[200],
+	275: valueRunes[70] + valueRunes[200] + valueRunes[5],
+	298: valueRunes[200] + valueRunes[8] + valueRunes[90],
+	304: valueRunes[4] + valueRunes[300],
+	315: valueRunes[300] + valueRunes[9] + valueRunes[6],
+	316: valueRunes[300] + valueRunes[9] + valueRunes[7],
+	344: valueRunes[300] + valueRunes[4] + valueRunes[40],
+	415: valueRunes[400] + valueRunes[9] + valueRunes[6],
+	416: valueRunes[400] + valueRunes[9] + valueRunes[7],
+	515: valueRunes[500] + valueRunes[9] + valueRunes[6],
+	516: valueRunes[500] + valueRunes[9] + valueRunes[7],
+	615: valueRunes[600] + valueRunes[9] + valueRunes[6],
+	616: valueRunes[600] + valueRunes[9] + valueRunes[7],
+	670: valueRunes[70] + valueRunes[600],
+	672: valueRunes[400] + valueRunes[70] + valueRunes[200] + valueRunes[2],
+	674: valueRunes[70] + valueRunes[4] + valueRunes[200] + valueRunes[400],
+	698: valueRunes[600] + valueRunes[8] + valueRunes[90],
+	715: valueRunes[700] + valueRunes[9] + valueRunes[6],
+	716: valueRunes[700] + valueRunes[9] + valueRunes[7],
+	744: valueRunes[700] + valueRunes[4] + valueRunes[40],
+	815: valueRunes[800] + valueRunes[9] + valueRunes[6],
+	816: valueRunes[800] + valueRunes[9] + valueRunes[7],
+	915: valueRunes[900] + valueRunes[9] + valueRunes[6],
+	916: valueRunes[900] + valueRunes[9] + valueRunes[7],
+	1015: valueRunes[1000] + valueRunes[9] + valueRunes[6],
+	1016: valueRunes[1000] + valueRunes[9] + valueRunes[7],
+	1115: valueRunes[1100] + valueRunes[9] + valueRunes[6],
+	1116: valueRunes[1100] + valueRunes[9] + valueRunes[7],
+}
+
+// https://en.wikipedia.org/wiki/Geresh
+const geresh = "\u05F3"
+
+// https://en.wikipedia.org/wiki/Gershayim
+const gershayim = rune(1524)
+
 // Value returns the gematria value of str, and an error if result has overflowed.
 // Value is calculated using the standard encoding,
 // assigning the values 1–9, 10–90, 100–400 to the 22 Hebrew letters in order.
@@ -99,11 +178,11 @@ func Value(str string) (int, error) {
 	var sum int
 	for _, r := range str {
 
-		result, ok := add(sum, int(runeValues[r]))
+		result, ok := add(sum, runeValues[r])
 		sum = result
 
 		if !ok {
-			return result, fmt.Errorf("string is too long")
+			return result, errors.New("string is too long")
 		}
 	}
 	return sum, nil
@@ -118,4 +197,44 @@ func add(a, b int) (value int, ok bool) {
 	}
 
 	return result, true
+}
+
+// Hebrew converts a number to a numeric Hebrew string
+// Valid range: 1-1199
+func Hebrew(i int) (string, error) {
+	if _, ok := specials[i]; ok {
+		return specials[i], nil
+	}
+
+	result := ""
+
+	if i < 1 || i > 1199 {
+		return result, errors.New("Number out of range (1-1199)")
+	}
+
+	ones := i % 10
+	tens := (i - ones) % 100
+	hundreds := (i - ones - tens)
+
+	result += valueRunes[hundreds]
+	result += valueRunes[tens]
+	result += valueRunes[ones]
+
+	return result, nil
+}
+
+// AddGeresh converts adds a geresh or gershayim to a numeric Hebrew string as returned by Hebrew()
+// If the string contains one rune, a geresh is appended
+// If the string contains more than one rune, gershayim is inserted before the last rune
+// If the function receives a non-Hebrew string, the result is undefined
+func AddGeresh(heb string) (string, error) {
+	result := ""
+	tmp := []rune(heb)
+	if len(tmp) == 1 {
+		result = heb + geresh
+	} else if len(tmp) > 1 {
+		last := tmp[len(tmp)-1:][0]
+		result = string(append(tmp[:len(tmp)-1], gershayim, last))
+	}
+	return result, nil
 }
